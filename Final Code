@@ -1,0 +1,1051 @@
+import tkinter as tk
+import random
+import time
+
+#Imports the tkinter library and PIL module
+from tkinter import *
+from tkinter import simpledialog
+from tkinter import messagebox
+from PIL import ImageTk, Image
+from pprint import pprint
+
+#Creates instance of tkinter window
+window = tk.Tk()
+
+var = tk.IntVar()
+
+#Resizes the size of the background image to the size of the screen
+def displayBackground(screenWidth, screenHeight):
+    
+    #Defines the background image
+    bgFile = Image.open('E:\Hariram\CS NEA Python\Card Images\Background.png')
+
+    #Resizes the image to the size of the screen
+    resizedBG = bgFile.resize((screenWidth,screenHeight), Image.ANTIALIAS)
+    global newBackground
+    newBackground = ImageTk.PhotoImage(resizedBG)
+
+    #Places the image on the canvas
+    canvas.create_image(0, 0, anchor=NW, image=newBackground)
+
+
+#Displays the value stored in the pot
+def displayPot(potValue):
+
+    #Converts to string type
+    potValueStr = str(potValue)
+
+    #Creates the label for number of chips in the pot with the text being set
+    global potLabel
+    potLabel = Label(window, text=('Pot Value: ' + potValueStr))
+
+    #Changes the font and size of the label
+    potLabel.config(font=("Courier", 20))
+
+    #Places the label in the correct location
+    potLabel.place(x=920,y=400)
+    
+#Displays the value of number of poker chips held by each player
+def displayUserChips(numOfChips, playerNum, X, Y):
+
+    #Converts to string type
+    numChipsStr = str(numOfChips)
+    playerNumStr = str(playerNum)
+
+    #Creates the label for number of chips held by the player with the text being set 
+    chipLabel = Label(window, text=('Player ' + playerNumStr + ' Chips: ' + numChipsStr))
+
+    #Changes the font and size of the label
+    chipLabel.config(font=("Courier", 15))
+
+    #Places the label in the correct location
+    chipLabel.place(x=X, y=Y)
+
+    return chipLabel
+
+#Displays the number of chips the user is willing to bet for that round 
+def displayChipsToBet(chipsBet, X, Y):
+
+    #Converts to string type
+    chipsBetStr = str(chipsBet)
+
+    #Displays the label for number of chips the use is willing to bet for the round with the text being set
+    betLabel = Label(window, text=('Number of Chips Betting: ' + chipsBetStr))
+
+    #Changes the font and size of the label
+    betLabel.config(font=("Courier", 15))
+
+    #Places the label in the correct location
+    betLabel.place(x=X, y=Y)
+
+    return betLabel
+
+#creates the deck of cards
+def createCards():
+
+    #Creates the deck for the cards to be stored in
+    deck = [["", ""], ["", ""], ["", ""], ["", ""], ["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""], ["", ""],
+            ["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""],
+            ["", ""],["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""],
+            ["", ""],["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""], ["", ""], ["", ""],["", ""], ["", ""],
+            ["", ""], ["", ""],["", ""], ["", ""], ["", ""], ["", ""]]
+    #Arrays storing every possible suit and symbol
+    suits = ["Spades", "Hearts", "Clubs", "Diamonds"]
+    symbols = ["Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"]
+
+    cardNum = 0
+
+    #Making all possible combinations(52 cards in a deck)
+    for i in range(4):
+        for j in range(13):
+            deck[cardNum][0] = suits[i]
+            deck[cardNum][1] = symbols[j]
+            cardNum = cardNum + 1
+    return deck
+
+#Shuffles the deck of cards
+def shuffleCards(deck):
+    random.shuffle(deck)
+    return deck
+
+#Creates the interface for the user
+def createInterface(numOfChipsPerPlayer, initialBets):
+    #To display number of poker chips held by each player
+    global player1ChipsLbl
+    player1ChipsLbl = displayUserChips(numOfChipsPerPlayer, 1, 500, 930)
+    global player2ChipsLbl
+    player2ChipsLbl = displayUserChips(numOfChipsPerPlayer, 2, 60, 500)
+    global player3ChipsLbl
+    player3ChipsLbl = displayUserChips(numOfChipsPerPlayer, 3, 500, 120)
+    global player4ChipsLbl
+    player4ChipsLbl = displayUserChips(numOfChipsPerPlayer, 4, 1100, 120)
+    global player5ChipsLbl
+    player5ChipsLbl = displayUserChips(numOfChipsPerPlayer, 5, 1550, 500)
+    global player6ChipsLbl
+    player6ChipsLbl = displayUserChips(numOfChipsPerPlayer, 6, 1100, 930)
+
+    #To display number of poker chips held by each player
+    global player1BetLbl
+    player1BetLbl = displayChipsToBet(initialBets, 500, 950)
+    global player2BetLbl
+    player2BetLbl = displayChipsToBet(initialBets, 60, 520)
+    global player3BetLbl
+    player3BetLbl = displayChipsToBet(initialBets, 500, 95)
+    global player4BetLbl
+    player4BetLbl = displayChipsToBet(initialBets, 1100, 95)
+    global player5BetLbl
+    player5BetLbl = displayChipsToBet(initialBets, 1550, 520)
+    global player6BetLbl
+    player6BetLbl = displayChipsToBet(initialBets, 1100, 950)
+
+#Function for dealing the preflop cards 
+def dealPreflopCards(deck, numOfPlayers):
+
+    currentCard = 0
+
+    #Creates the array for storing information on the cards held by each player
+    playerCards = [["" for x in range(4)] for y in range(numOfPlayers)]
+
+    #Repeats twice as each player needs to have two hole cards
+    for x in range(2):
+        #Gives a card to each player when this loop is executed once
+        for y in range(numOfPlayers):
+            #Assigns the cards to each player
+            if (x == 0):
+                playerCards[y][0] = deck[currentCard][0]
+                playerCards[y][1] = deck[currentCard][1]
+            else:
+                playerCards[y][2] = deck[currentCard][0]
+                playerCards[y][3] = deck[currentCard][1]
+                
+            currentCard = currentCard + 1
+    
+    return playerCards
+
+#Displays the cards faced up
+def displayCardsFaceUp(X, Y, suit, symbol):
+
+    #Creates and places the labels on which the card will be placed
+    card = Label(window, image = None)
+    card.place(x = X, y = Y)
+    
+    #Retrieves the card file for the turn cards
+    cardImg = Image.open('E:\\Hariram\\CS NEA Python\\Card Images\\' + symbol + ' of ' + suit + '.png')
+
+    #Resizes the card
+    resizedCard = cardImg.resize((90,130), Image.ANTIALIAS)
+    newCard = ImageTk.PhotoImage(resizedCard)
+
+    #Loads the image of the cards on the label
+    card.image = newCard
+    card.config(image = newCard)
+
+    return card
+
+#Displays the cards held by opponent players, displaying only the back of the cards
+def displayOpponentCards(X, Y):
+
+    #Creates and places the labels on which the cards will be placed
+    label = Label(window, image = None)
+    label.place(x = X, y = Y)
+    
+    #Retrieves file path for the image for the back of the cards
+    cardImg = Image.open('E:\\Hariram\\CS NEA Python\\Card Images\\Deck of cards (back).png')
+
+    #Resizes the image
+    resizedCard = cardImg.resize((90,130), Image.ANTIALIAS)
+    newCard = ImageTk.PhotoImage(resizedCard)
+
+    #Loads the image of the back of cards on the label
+    label.image = newCard
+    label.config(image = newCard)
+
+    return label
+
+#Creates the cards held by the opponent players
+def createOpponentCards():
+
+    global oppCard1
+    oppCard1 = displayOpponentCards(60, 355)
+    global oppCard2
+    oppCard2 = displayOpponentCards(160, 355)
+    global oppCard3
+    oppCard3 = displayOpponentCards(510, 155)
+    global oppCard4
+    oppCard4 = displayOpponentCards(610, 155)
+    global oppCard5
+    oppCard5 = displayOpponentCards(1110, 155)
+    global oppCard6
+    oppCard6 = displayOpponentCards(1210, 155)
+    global oppCard7
+    oppCard7 = displayOpponentCards(1560, 355)
+    global oppCard8
+    oppCard8 = displayOpponentCards(1660, 355)
+    global oppCard9
+    oppCard9 = displayOpponentCards(1110, 780)
+    global oppCard10
+    oppCard10 = displayOpponentCards(1210, 780)
+
+
+#Subroutine for the preflop round
+def preflopRound(dealerNum, numOfPlayers, numOfChipsPerPlayer, anteValue, potValue):
+
+    #Determines the size of the array gamePlayers
+    rows, cols = (numOfPlayers, 3)
+
+    #Creates the gamePlayers array which is used to determine the information on a player, such as
+    #the number of poker chips they hold, the amount they're willing to bet and whether they have folded
+    global gamePlayers
+    gamePlayers = [["" for x in range(cols)] for y in range(rows)]
+    for i in range(numOfPlayers):
+        gamePlayers[i][0] = numOfChipsPerPlayer
+        gamePlayers[i][1] = 0
+        gamePlayers[i][2] = False
+
+    #Calls function to play the antes
+    potValue = playAnte(anteValue, numOfPlayers, potValue, gamePlayers)
+    window.update()
+
+    #Sets the current player at to the dealer
+    global playerNumberAt
+    playerNumberAt = dealerNum
+
+    #Calls the function to play the small and big blinds
+    playerNumberAt = playBlinds(playerNumberAt, numOfPlayers, gamePlayers)
+
+    #After the blinds the minimum bet is set to 10
+    global minimumBet
+    minimumBet = 10
+
+    #Determines whether the first bet of the round has been placed
+    firstBetPlaced = True
+
+    nextRoundStart = roundPlay(firstBetPlaced, playerNumberAt)
+
+    #Messagebox to indicate the flop is about to start
+    messagebox.showinfo("Flop Round", "The flop round is about to begin.") 
+    
+    return nextRoundStart
+    
+#Function to determine the next to make their move is 
+def nextPlayer(playerNumberAt, numOfPlayers, gamePlayers):
+
+    #Checks whether the program has reached the last player in the cycle
+    if (playerNumberAt == (numOfPlayers - 1)):
+        #If so the next player will be the player 1
+        playerNumberAt = 0
+    #If this isn't the case, then the it will just increment by 1
+    else:
+        playerNumberAt = playerNumberAt + 1
+
+    #Checks whether that next player has already folded, if so it checks the next player
+    while (gamePlayers[playerNumberAt][2] == True):
+        if (playerNumberAt == (numOfPlayers - 1)):
+            playerNumberAt = 0
+        else:
+            playerNumberAt = playerNumberAt + 1
+              
+    return playerNumberAt
+
+#Subroutine to play the small and big blinds
+def playBlinds(playerNumberAt, numOfPlayers, gamePlayers):
+    
+    #Player next to dealer to play the small blind
+    playerNumberAt = nextPlayer(playerNumberAt, numOfPlayers, gamePlayers)
+    gamePlayers[playerNumberAt][1] = gamePlayers[playerNumberAt][1] + 5
+
+    #Small blind update after three seconds
+    time.sleep(3)
+
+    #Updates the label for the small blind
+    label = retrieveBetLbl(playerNumberAt)
+    updateLbl(label, playerNumberAt, gamePlayers)
+
+    window.update()
+
+    #Player two next to the dealer to play the big blind
+    playerNumberAt = nextPlayer(playerNumberAt, numOfPlayers, gamePlayers)
+    gamePlayers[playerNumberAt][1] = gamePlayers[playerNumberAt][1] + 10
+
+    #Big blind update after 3 seconds
+    time.sleep(3)
+
+    #Updates the label for the big blind
+    label = retrieveBetLbl(playerNumberAt)
+    updateLbl(label, playerNumberAt, gamePlayers)
+
+    window.update()
+    
+    return playerNumberAt
+
+#Function to retrieve the user bet label which needs to be updated
+def retrieveBetLbl(playerNumberAt):
+    if (playerNumberAt == 0):
+        return player1BetLbl
+    elif (playerNumberAt == 1):
+        return player2BetLbl
+    elif (playerNumberAt == 2):
+        return player3BetLbl
+    elif (playerNumberAt == 3):
+        return player4BetLbl
+    elif (playerNumberAt == 4):
+        return player5BetLbl
+    elif (playerNumberAt == 5):
+        return player6BetLbl
+
+#Updates the label based on the amount of chips the player puts in
+def updateLbl(label, playerNumberAt, gamePlayers):
+    label.config(text=('Number of Chips Betting: ' + str(gamePlayers[playerNumberAt][1])))
+
+#Procedure for players to play the ante and shown onto the screen
+def playAnte(anteValue, numOfPlayers, potValue, gamePlayers):
+
+    #Plays ante after 3 seconds
+    time.sleep(3)
+
+    #The number of chips held by each player decreases by the ante value and labels are updated
+    for i in range(numOfPlayers):
+        gamePlayers[i][0] = gamePlayers[i][0] - anteValue
+        label = retrieveChipLbl(i)
+        updateChipsLbl(label, i, gamePlayers[i][0])       
+
+    #The pot value increaes by the total amount of chips the players cash in and the label is updated
+    potValue = potValue + (anteValue * numOfPlayers)
+    potLabel.config(text=('Pot Value: ' + str(potValue)))
+
+    return potValue
+
+#Function to retrieve the appropriate num of chips label which needs to be updated
+def retrieveChipLbl(i):
+    if (i == 0):
+        return player1ChipsLbl
+    elif (i == 1):
+        return player2ChipsLbl
+    elif (i == 2):
+        return player3ChipsLbl
+    elif (i == 3):
+        return player4ChipsLbl
+    elif (i == 4):
+        return player5ChipsLbl
+    elif (i == 5):
+        return player6ChipsLbl
+
+#Updates the label for number of chips held based on the amount they are willing to bet
+def updateChipsLbl(label, i, value):
+    label.config(text=('Player ' + str((i + 1)) + ' Chips: ' + str(value)))
+
+#Function for the bots to make their appropriate moves
+def botMove(playerNumberAt):
+
+    #Creates a three second time delay between previous and current moves
+    window.update()
+    time.sleep(3)
+
+    #Determines the move users are to make !!!Temporary Code!!!
+    if (playerNumberAt == 1):
+        selectedMove = "Call"
+    elif (playerNumberAt == 2):
+        selectedMove = "Fold"
+    elif (playerNumberAt == 3):
+        selectedMove = "Raise"
+    elif (playerNumberAt == 4):
+        selectedMove = "Call"
+    elif (playerNumberAt == 5):
+        selectedMove = "Call"
+
+    #Executes the appropriate move selected by bots
+    match selectedMove:
+
+        #Selecting 'Raise' means they increase the bet
+        case "Raise":
+
+            #Varaible stores the value which the player wishes to increase the bet by
+            global minimumBet
+            betPlaced = minimumBet * 2
+
+            #Minimum bet the next player can now make is the bet placed by the current player
+            minimumBet = betPlaced
+
+            #The value they are betting is stored in the gamePlayers array
+            gamePlayers[playerNumberAt][1] = betPlaced
+
+            #Updates the label on the screen to show that the bot has matched the previous bet
+            label = retrieveBetLbl(playerNumberAt)
+            updateLbl(label, playerNumberAt, gamePlayers)
+
+            print (gamePlayers)
+            
+        #Selecting 'Call' means they match the previous bet
+        case "Call":
+            gamePlayers[playerNumberAt][1] = minimumBet
+
+            #Updates the label on the screen to show that the bot has matched the previous bet
+            label = retrieveBetLbl(playerNumberAt)
+            updateLbl(label, playerNumberAt, gamePlayers)
+
+        #Selecting 'Fold' means they throw away their cards and are no longer betting
+        case "Fold":
+            
+            #Sets the third colum of gamePlayers to "True" to indicate that player has folded
+            gamePlayers[playerNumberAt][2] = True
+
+            #As the player is now longer betting, the row to indicate the chips they were willing
+            #to bet is set back to 0
+            gamePlayers[playerNumberAt][1] = 0
+
+            #The label on the screen is updated to show they are no longer betting for this game
+            betLabel = retrieveBetLbl(playerNumberAt)
+            updateLbl(betLabel, playerNumberAt, gamePlayers)
+
+            #Removes the appropriate cards from the screen
+            if (playerNumberAt == 1):
+                oppCard1.destroy()
+                oppCard2.destroy()
+            elif (playerNumberAt == 2):
+                oppCard3.destroy()
+                oppCard4.destroy()
+            elif (playerNumberAt == 3):
+                oppCard5.destroy()
+                oppCard6.destroy()
+            elif (playerNumberAt == 4):
+                oppCard7.destroy()
+                oppCard8.destroy()
+            elif (playerNumberAt == 5):
+                oppCard9.destroy()
+                oppCard10.destroy()
+
+#Function called when user clicks oon the 'Call' button
+def userCall():
+    
+    #The value they are betting is stored in the gamePlayers array 
+    gamePlayers[0][1] = minimumBet
+
+    #Updates the label on the screen to show that the bot has matched the previous bet
+    label = retrieveBetLbl(0)
+    updateLbl(label, 0, gamePlayers)
+
+#Function called when user clicks on the 'Fold' button
+def userFold():
+    
+    #Sets the third colum of gamePlayers to "True" to indicate that player has folded
+    gamePlayers[0][2] = True
+
+    #As the player is now longer betting, the row to indicate the chips they were willing
+    #to bet is set back to 0
+    gamePlayers[0][1] = 0
+
+    #The label on the screen is updated to show they are no longer betting for this game
+    betLabel = retrieveBetLbl(0)
+    updateLbl(betLabel, 0, gamePlayers)
+
+    #Removes the two user cards
+    userCard1.destroy()
+    userCard2.destroy()
+
+#Function called when the user clicks the 'Raise' button
+def userRaise():
+
+    #Opens a new window enabling user to enter the amount they are raising to 
+    betPlaced = simpledialog.askstring(title="User Raise",
+                                        prompt="How much are you raising to?:")
+
+    #Validates the user input for the amount they're raising to
+    resultValid = validateRaise(betPlaced)
+
+    #Enables the user to keep re-entering if input is invalid
+    while resultValid == False:
+        #Opens a new window enabling user to enter the amount they are raising to 
+        betPlaced = simpledialog.askstring(title="User Raise",
+                                           prompt="How much are you raising to?:")
+
+        resultValid = validateRaise(betPlaced)
+
+    #Minimum bet is set as the bet placed by the user
+    global minimumBet
+    minimumBet = int(betPlaced)
+    
+    #The value they are betting is stored in the gamePlayers array
+    gamePlayers[0][1] = betPlaced
+
+    #Updates the label on the screen to show that the bot has matched the previous bet
+    label = retrieveBetLbl(0)
+    updateLbl(label, 0, gamePlayers)
+
+#Function to validate the raise input entered by the user
+def validateRaise(betPlaced):
+
+    #Checks whether the field is blank and gets the user to re-enter if so
+    if (betPlaced == ""):
+        messagebox.showerror("Error", "Please ensure field has been entered")
+
+        return False
+
+    #Checks whether the value entered is not an integer and gets the user to re-enter if so
+    elif not (betPlaced.isdigit()):
+        messagebox.showerror("Error", "Please ensure an integer value has been entered")
+
+        return False
+
+    #Checks whether the value entered is less than the minimum bet and gets user to re-enter if so
+    elif (int(betPlaced) <= minimumBet):
+        messagebox.showerror("Error", "Please ensure the bet is greater than the minimum bet")
+
+        return False
+        
+    #Checks whether the value entered is greater than the amount of chips held by the user and gets the user to re-enter if so
+    elif (int(betPlaced) > gamePlayers[0][0]):
+        messagebox.showerror("Error", "You do not have enough poker chips to make this bet. Please try again")
+
+        return False
+    
+    else:
+        
+        return True
+
+#Function to determine the number of players left in the game
+def checkNumPlayers(mumOfPlayers):
+
+    #Sets the number of players left to the total number of players at the start of the game
+    numPlayersLeft = numOfPlayers
+
+    #Checks whether the player has folded and the value of numPlayersleft decrements if so
+    for i in range (numPlayersLeft):
+        userFolded = gamePlayers[i][2]
+        if (userFolded == True):
+            numPlayersLeft = numPlayersLeft - 1
+
+    return numPlayersLeft
+
+#Function to determine whether every player left in the game has placed the same amount of chips
+def checkChipsSame(numOfPlayers):
+    #Initially sets 'chipValuesSame' to True
+    chipValuesSame = True
+
+    #List to add the values betting for those that haven't folded
+    chip_list = []
+
+    #Traverses througH every player in the table
+    for i in range(numOfPlayers):
+
+        #Skips the player if they have folded
+        if(gamePlayers[i][2] == False):
+
+            #Adds the amount that player is betting to the list
+            chip_list.append(gamePlayers[i][1])
+
+    #Traverses through every player added to the list
+    for x in range(len(chip_list)):
+        #Compares the first item to every other item
+        if ((chip_list[0] != chip_list[x]) or (chip_list[x] == 0)): 
+
+            #If one player is different then the value is set to false
+            chipValuesSame = False
+
+    return chipValuesSame
+
+#Function to allow user to enter the move they are making
+def userMove():
+
+    #Enables user to input their move
+    move = simpledialog.askstring(title="User Move",
+                                        prompt="What move are you making?:")
+    
+    #Validates the user input 
+    moveValid = validateMove(move)
+
+    #Enables the user to keep re-entering if input is invalid
+    while moveValid == False:
+        #Opens a new window enabling user to keep re-entering if invalid 
+        move = simpledialog.askstring(title="User Move",
+                                            prompt="What move are you making?:")
+
+        moveValid = validateMove(move)
+
+#Function to validate the move entered by the user
+def validateMove(move):
+    #If the user wants to fold, the fold procedure is called
+    if (move == "Fold") or (move == "fold"):
+        userFold()
+
+        return True
+
+    #If the user wants to call, the call procedure is called
+    elif (move == "Call") or (move == "call"):
+        userCall()
+        return True
+
+    ##If the user wants to raise, the raise procedure is called
+    elif (move == "Raise") or (move == "raise"):
+        userRaise()
+
+        return True
+        
+    #Any other input gets rejected
+    else:
+        messagebox.showerror("Error", "Invalid input. Please try again")
+
+        return False
+
+#Function for flop round
+def flop(playerCards, cardNum, deck, dealerNum):
+    #Determines the size of the array communityCards array
+    rows, cols = (5, 2)
+
+    #Creates the gamePlayers array which stores the 5 community cards
+    global communityCards
+    communityCards = [["" for x in range(cols)] for y in range(rows)]
+
+    #Deals the flop cards out
+    communityCards = dealFlops(cardNum, deck, communityCards)
+
+    #Updates pointer for the card at the top of the stack
+    cardNum = cardNum + 3
+
+    #Calls function to display the flop cards onto the canvas
+    comCard1 = displayCardsFaceUp(720, 470, communityCards[0][0], communityCards[0][1])
+    comCard2 = displayCardsFaceUp(820, 470, communityCards[1][0], communityCards[1][1])
+    comcard3 = displayCardsFaceUp(920, 470, communityCards[2][0], communityCards[2][1])
+
+    global minimumBet
+    minimumBet = 0
+
+    #Determines whether the first bet of the round has been placed
+    firstBetPlaced = False
+    
+    playerNumerAt = dealerNum
+
+    nextRoundStart = roundPlay(firstBetPlaced, playerNumberAt)
+
+    #Messagebox to indicate the turn round is about to start
+    messagebox.showinfo("Turn Round", "The turn round is about to begin.") 
+
+    return nextRoundStart
+
+#Function to deal the flop cards
+def dealFlops(cardNum, deck, communityCards):
+
+    #Places the three cards on the top of the deck onto the table
+    for i in range(3):
+        communityCards[i][0] = deck[cardNum][0]
+        communityCards[i][1] = deck[cardNum][1]
+
+        #Value of 'cardNum' increments as a card is selected from deck
+        cardNum = cardNum + 1
+
+    return communityCards
+
+def botFirstMove(playerNumberAt):
+    
+    #Creates a three second time delay between previous and current moves
+    window.update()
+    time.sleep(3)
+
+    #Determines the move users are to make !!!Temporary Code!!!
+    if (playerNumberAt == 1):
+        selectedMove = "Check"
+    elif (playerNumberAt == 2):
+        selectedMove = "Fold"
+    elif (playerNumberAt == 3):
+        selectedMove = "Bet"
+    elif (playerNumberAt == 4):
+        selectedMove = "Check"
+    elif (playerNumberAt == 5):
+        selectedMove = "Bet"
+
+    #Executes the appropriate move selected by bots
+    match selectedMove:
+
+        #Selecting 'Bet' means they can play a bet
+        case "Bet":
+
+            betPlaced = 30
+
+            #Minimum bet the next player can now make is the bet placed by the current player
+            global minimumBet
+            minimumBet = betPlaced
+
+            #The value they are betting is stored in the gamePlayers array
+            gamePlayers[playerNumberAt][1] = betPlaced
+
+            #Updates the label on the screen to show that the bot has matched the previous bet
+            label = retrieveBetLbl(playerNumberAt)
+            updateLbl(label, playerNumberAt, gamePlayers)
+
+            return True
+            
+        #Selecting 'Check' meants they don't make a bet
+        case "Check":
+            pass
+
+            return False
+
+        #Selecting 'Fold' means they throw away their cards and are no longer betting
+        case "Fold":
+            
+            #Sets the third colum of gamePlayers to "True" to indicate that player has folded
+            gamePlayers[playerNumberAt][2] = True
+
+            #As the player is now longer betting, the row to indicate the chips they were willing
+            #to bet is set back to 0
+            gamePlayers[playerNumberAt][1] = 0
+
+            #The label on the screen is updated to show they are no longer betting for this game
+            betLabel = retrieveBetLbl(playerNumberAt)
+            updateLbl(betLabel, playerNumberAt, gamePlayers)
+
+            #Removes the appropriate cards from the screen
+            if (playerNumberAt == 1):
+                oppCard1.destroy()
+                oppCard2.destroy()
+            elif (playerNumberAt == 2):
+                oppCard3.destroy()
+                oppCard4.destroy()
+            elif (playerNumberAt == 3):
+                oppCard5.destroy()
+                oppCard6.destroy()
+            elif (playerNumberAt == 4):
+                oppCard7.destroy()
+                oppCard8.destroy()
+            elif (playerNumberAt == 5):
+                oppCard9.destroy()
+                oppCard10.destroy()
+
+            return False
+
+#Function for user moves when first bet hasn't been placed
+def userFirstMove():
+    #Enables user to input their move
+    move = simpledialog.askstring(title="User Move",
+                                        prompt="What move are you making?:")
+    
+    #Validates the user input 
+    moveValid = validateFirstMove(move)
+
+    #Enables the user to keep re-entering if input is invalid
+    while moveValid == False:
+        #Opens a new window enabling user to keep re-entering if invalid 
+        move = simpledialog.askstring(title="User Move",
+                                            prompt="What move are you making?:")
+
+        moveValid = validateFirstMove(move)
+
+    #Checks whether the first bet has been placed
+    if (move == "Bet") or (move == "bet"):
+        return True
+    else:
+        return False
+
+#Function to check whether user input for first move is valid and executes it if so
+def validateFirstMove(move):
+    
+    #If the user wants to fold, the fold procedure is called
+    if (move == "Fold") or (move == "fold"):
+        userFold()
+
+        return True
+
+    #If the user wants to check, nothing happens
+    elif (move == "Check") or (move == "check"):
+
+        return True
+
+    ##If the user wants to bet, the bet procedure is called
+    elif (move == "Bet") or (move == "bet"):
+        userBet()
+
+        return True
+        
+    #Any other input gets rejected
+    else:
+        messagebox.showerror("Error", "Invalid input. Please try again")
+
+        return False
+
+#Function called after user chooses to bet
+def userBet():
+    #Opens a new window enabling user to enter the amount they are betting 
+    betPlaced = simpledialog.askstring(title="User Raise",
+                                        prompt="How much are you betting?:")
+
+    #Validates the user input for the amount they're betting
+    resultValid = validateBet(betPlaced)
+
+    #Enables the user to keep re-entering if input is invalid
+    while resultValid == False:
+        #Opens a new window enabling user to enter the amount they are betting 
+        betPlaced = simpledialog.askstring(title="User Raise",
+                                           prompt="How much are you betting?:")
+
+        resultValid = validateBet(betPlaced)
+
+    #Minimum bet is set as the bet placed by the user
+    global minimumBet
+    minimumBet = betPlaced
+    
+    #The value they are betting is stored in the gamePlayers array
+    gamePlayers[0][1] = betPlaced
+
+    #Updates the label on the screen to show the user how much they have put in
+    label = retrieveBetLbl(0)
+    updateLbl(label, 0, gamePlayers)
+
+#Function to validate the bet entered by the user
+def validateBet(betPlaced):
+    
+    #Checks whether the field is blank and gets the user to re-enter if so
+    if (betPlaced == ""):
+        messagebox.showerror("Error", "Please ensure field has been entered")
+
+        return False
+
+    #Checks whether the value entered is not an integer and gets the user to re-enter if so
+    elif not (betPlaced.isdigit()):
+        messagebox.showerror("Error", "Please ensure an integer value has been entered")
+
+        return False
+
+    #Checks whether the value entered is less than the minimum bet and gets user to re-enter if so
+    elif (int(betPlaced) <= minimumBet):
+        print (minimumBet)
+        messagebox.showerror("Error", "Please ensure the bet is greater than the minimum bet")
+
+        return False
+        
+    #Checks whether the value entered is greater than the amount of chips held by the user and gets the user to re-enter if so
+    elif (int(betPlaced) >= gamePlayers[0][0]):
+        messagebox.showerror("Error", "You do not have enough poker chips to make this bet. Please try again")
+
+        return False
+    
+    else:
+        
+        return True
+    
+#Function for the turn round
+def turn(playerCards, cardNum, deck, dealerNum, communityCards):
+
+    #Deal out the card required in the turn round
+    communityCards = dealTurn(deck, cardNum)
+    
+    #Calls function to display the flop cards onto the canvas
+    comCard4 = displayCardsFaceUp(1020, 470, communityCards[3][0], communityCards[3][1])
+
+    global minimumBet
+    minimumBet = 0
+
+    #Determines whether the first bet of the round has been placed
+    firstBetPlaced = False
+
+    playerNumerAt = dealerNum
+
+    nextRoundStart = roundPlay(firstBetPlaced, playerNumberAt)
+
+    #Messagebox to indicate the river round is about to start
+    messagebox.showinfo("River Round", "The river round is about to begin.")
+
+    return nextRoundStart
+
+def roundPlay(firstBetPlaced, playerNumberAt):
+
+    #Determines the number of players left in the game and whether each player has contributed same amount of chips
+    numPlayersLeft = checkNumPlayers(numOfPlayers)
+    chipValuesSame = checkChipsSame(numOfPlayers)
+    
+    #Checks conditions for whether round should be over
+    while (numPlayersLeft != 1) and (chipValuesSame == False):
+
+        #Finds out who the next player to make their move is 
+        playerNumberAt = nextPlayer(playerNumberAt, numOfPlayers, gamePlayers)
+
+        #Checks whether the first bet has been placed
+        if firstBetPlaced == True:
+            #Works out whether it is the users turn or a bots
+            if (playerNumberAt != 0):
+                botMove(playerNumberAt)
+            else:
+                userMove()
+        else:
+            #Works out whether it is the users turn or a bots            
+            if (playerNumberAt != 0):
+                firstBetPlaced = botFirstMove(playerNumberAt)
+            else:
+                firstBetPlaced = userFirstMove()
+                
+        #Recalculates values for 'numPlayersLeft' and 'chipsValuesSame'
+        numPlayersLeft = checkNumPlayers(numOfPlayers)
+        chipValuesSame = checkChipsSame(numOfPlayers)
+
+    #Checks whether there is only one player left
+    if(numPlayersLeft == 1):
+        #Traverses through every player checking whether they folded
+        for x in range(numOfPlayers):
+            if (gamePlayers[x][2] == False):
+                #The one player left is the winner
+                winnerNum = x
+
+        #Updates the gamePlayers array
+        global potValue
+        gamePlayers[winnerNum][0] = gamePlayers[winnerNum][0] + potValue
+        gamePlayers[winnerNum][1] = 0
+
+        #Updates the GUI screen to show the user this change
+        label = retrieveBetLbl(winnerNum)
+        updateLbl(label, winnerNum, gamePlayers)
+        label = retrieveChipLbl(winnerNum)
+        updateChipsLbl(label, winnerNum, gamePlayers[winnerNum][0])
+
+        #Value of pot is now 0 wit hthe label on the screen also updated
+        potValue = 0
+        potLabel.config(text=('Pot Value: 0'))
+        
+        #Messagebox to indicate the winner of the round
+        messagebox.showinfo("Declare Winner", "Player " + str(winnerNum + 1) + " is the winner.")
+
+        return False
+
+    else:
+        for x in range(numOfPlayers):
+            #Adds the amount each player is willing to bet into the pot
+            potValue = potValue + gamePlayers[x][1]
+
+            #The amount they are placing into the pot is removed from their total
+            gamePlayers[x][0] = gamePlayers[x][0] - gamePlayers[x][1]
+
+            #The amount that the user is willing to bet is set to 0 for the next round
+            gamePlayers[x][1] = 0
+            
+            #Updates the GUI screen to show the user this change
+            label = retrieveBetLbl(x)
+            updateLbl(label, x, gamePlayers)
+            label = retrieveChipLbl(x)
+            updateChipsLbl(label, x, gamePlayers[x][0])
+
+
+        #Updates the pot of the screen to show the amount held in it after this round
+        potLabel.config(text=('Pot Value: ' + str(potValue)))
+     
+
+        return True
+    
+#Function to deal the turn cards
+def dealTurn(deck, cardNum):
+
+    #Places the next card on the top of the stack on table
+    communityCards[3][0] = deck[cardNum][0]
+    communityCards[3][1] = deck[cardNum][1]
+
+    return communityCards
+
+#///*Main Program*///
+
+#Retrieves values for width and height of the screen
+screenWidth = window.winfo_screenwidth()
+screenHeight = window.winfo_screenheight()
+    
+#Creates a canvas of height and weight of the screen
+canvas = Canvas(window, height=screenHeight, width=screenWidth)
+
+#Calls function to display background onto the screen, covering the entire screen
+displayBackground(screenWidth, screenHeight)
+canvas.pack()
+    
+#Value of the pot is initialised as 0
+potValue = 0
+displayPot(potValue)
+
+#Number of Poker Chips per Player is initialised to 500 and initialBets to 0
+numOfChipsPerPlayer = 500
+initialBets = 0
+
+#calls the function to display all labels and buttons required
+createInterface(numOfChipsPerPlayer, initialBets)
+
+#Displays the cards after 3 seconds
+window.update()
+time.sleep(3)
+
+#Array deck used to store the created deck of cards
+deck = createCards()
+
+#Shuffles the deck of cards
+shuffleCards(deck)
+
+#The pprint module enables data items to be printed in separate lines
+pprint(deck)
+
+numOfPlayers = 6
+
+playerCards = dealPreflopCards(deck, numOfPlayers)
+
+#Determines which card that is on he top of the pile
+cardNum = 0
+
+userCard1 = displayCardsFaceUp(510, 780, playerCards[0][0], playerCards[0][1])
+userCard2 = displayCardsFaceUp(610, 780, playerCards[0][2], playerCards[0][3])
+
+#Calls procedure to display the back of the opponent cards
+createOpponentCards()
+cardNum = (numOfPlayers * 2) 
+
+#Sets 'player 1' as the dealer
+dealerNum = 0
+
+#Ante value per game is set as 10. Ante is the forced bet each player must do
+anteValue = 10
+
+window.update()
+
+#Begins the preflop round
+flopToStart = preflopRound(dealerNum, numOfPlayers, numOfChipsPerPlayer, anteValue, potValue)
+
+#Checks whether the flop round can begin
+if (flopToStart == True):
+    turnToStart = flop(playerCards, cardNum, deck, dealerNum)
+    
+    cardNum = cardNum + 3
+
+    #Checks whether the turn round can begin
+    if (turnToStart == True):
+        riverToStart = turn(playerCards, cardNum, deck, dealerNum, communityCards)
+
+window.mainloop()
